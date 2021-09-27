@@ -6,3 +6,5 @@ top_cities.json
 books.csv
 top_cities.db
 .webcache
+chapter5/articles/*
+jawiki-*
