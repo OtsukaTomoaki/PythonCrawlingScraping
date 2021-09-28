@@ -1,0 +1,89 @@
+import sys
+import logging
+from collections import Counter
+from pathlib import Path
+from typing import List, Iterator, TextIO
+
+import MeCab
+
+tagger = MeCab.Tagger('')
+tagger.parse('') #これは.parseToNode()の不具合を回避するためのハック
+
+def main():
+    '''
+    コマンドライン引数で指定したディレクトリ内のファイルを読み込んで頻出単語を表示する
+    '''
+
+    #コマンドラインの第一引数でWikiExtractorの出力先のディレクトリを指定する
+    #Pathオブジェクトはファイルやディレクトリのパス操作を抽象化するオブジェクト
+    input_dir = Path(sys.argv[1])
+
+    #単語の出現回数を格納するCounterオブジェクトを作成する
+    #Counterクラスはdictを継承しており、値としてキーの出現回数を保持する
+    frequency = Counter()
+
+    #.grob()でワイルドカードにマッチするファイルのリストを取得し、マッチした全てのファイルを処理する
+    for path in sorted(input_dir.glob('*/wiki_*')):
+        logging.info(f'processing {path}...')
+
+        with open(path) as file:
+            frequency += count_words(file)#ファイルに含まれる記事の単語の出現回数を数え、出現回数をマージする
+    #全記事の処理が完了したら上位３０件の名詞と出現回数を表示する
+    for word, count in frequency.most_common(30):
+        print(word, count)
+
+def count_words(file: TextIO) -> Counter:
+    '''
+    WikiWxtractorが出力したファイルに含まれる全ての記事から単語の出現回数を数える関数
+    '''
+    frequency = Counter() #ファイルないの単語の出現頻度を数えるCounterオブジェクト
+    num_docs = 0 #ログ出力ように処理した記事数を数えるための変数
+
+    for content in iter_doc_contents(file): #ファイル内の全記事について反復処理をする
+        words = get_words(content) #記事に含まれる名詞のリストを取得すr
+        #Counterのupdate()めそっでにリストなどの反復可能なオブジェクトを指定すると
+        #リストに含まれる値の出現回数を一度に増やせる
+        frequency.update(words)
+        num_docs += 1
+
+    logging.info(f'Found {len(frequency)} words from {num_docs} documents')
+    return frequency
+
+def iter_doc_contents(file: TextIO) -> Iterator[str]:
+    '''
+    ファイルオブジェクトを読み込んで、記事の中身（開始タグ<doc ...>と終了タグ</doc>の間のテキスト）を
+    順に返すジェネレータ関数
+    '''
+
+    for line in file: #ファイルに含まれる全ての行について反復処理する
+        if line.startswith('<doc '):
+            buffer = [] #開始タグが見つかったらバッファを初期化する
+        elif line.startswith('</doc>'):
+            #終了タグが見つかったらバッファの中身を結合してyieldする
+            content = ''.join(buffer)
+            yield content
+        else:
+            buffer.append(line) #開始タグ・終了タグ以外の行はバッファに追加する
+
+def get_words(content: str) -> List[str]:
+    '''
+    文字列内に出現する名詞のリスト（重複含む）を取得する関数
+    '''
+
+    words = [] #出現したら名詞を格納するリスト
+
+    node = tagger.parseToNode(content)
+    while node:
+        #node.featureはカンマで区切られた文字列なのでsplit()で分割して
+        #最初の2ページ目をposとpos_sub1に代入する。posはPart of Speech(品詞)の略
+        pos, pos_sub1 = node.feature.split(',')[:2]
+        #固有名詞、または一般名詞の場合のみwordsに追加する
+        if pos == '名詞' and pos_sub1 in ('固有名詞', '一般'):
+            words.append(node.surface)
+        node = node.next
+    return words
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO) #INFOレベル以上のログを出力する
+    main()
+
