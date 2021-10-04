@@ -11,3 +11,5 @@ jawiki-*
 google_api_key.txt
 __pycache__
 .env
+exchange.csv
+000232384.pdf
