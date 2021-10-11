@@ -13,4 +13,4 @@ __pycache__
 .env
 exchange.csv
 000232384.pdf
-items.jl
+*.jl
