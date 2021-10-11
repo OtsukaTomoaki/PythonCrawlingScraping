@@ -1,5 +1,6 @@
 import scrapy
 
+from myproject.items import Headline
 
 class NewsSpider(scrapy.Spider):
     name = 'news'#Spiderの名前
@@ -20,4 +21,14 @@ class NewsSpider(scrapy.Spider):
             yield response.follow(url, self.parse_topics)
 
     def parse_topics(self, response):
-        pass
+        """
+        トピックスのページからタイトルと本文を抜き出す
+
+        Args:
+            response ([type]): [description]
+        """
+        item = Headline() #HeadLineオブジェクトを作成
+        item['title'] = response.css('title::text').get() #タイトル
+        item['body'] = response.css('article p.sc-inlrYM').xpath('string()').get()#本文
+        yield item #Itemをyieldして、データを抽出する
+
