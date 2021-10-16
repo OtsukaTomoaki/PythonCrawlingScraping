@@ -29,3 +29,28 @@ class Restaurant(scrapy.Item):
     logitude = scrapy.Field()
     station = scrapy.Field()
     score = scrapy.Field()
+
+class Page(scrapy.Item):
+    """
+    Webページ
+
+    Args:
+        scrapy ([type]): [description]
+    """
+
+    url = scrapy.Field()
+    title = scrapy.Field()
+    content = scrapy.Field()
+
+    def __repr__(self):
+        """
+        ログへの出力時に長くなりすぎないように、contentを省略する
+
+        Returns:
+            [type]: [description]
+        """
+        p = Page(self) #このPageを複製したPageを得る
+        if len(p['content']) > 100:
+            p['content'] = p['content'][:100] + '...'#100文字よりも長い場合は省略する
+
+        return super(Page, p).__repr__() #複製したPageの文字列表現を返す
