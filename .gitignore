@@ -14,3 +14,4 @@ __pycache__
 exchange.csv
 000232384.pdf
 *.jl
+.DS_Store
