@@ -15,3 +15,4 @@ exchange.csv
 000232384.pdf
 *.jl
 .DS_Store
+chapter6/myproject/images/*
