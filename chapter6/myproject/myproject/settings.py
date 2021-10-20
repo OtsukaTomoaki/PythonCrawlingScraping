@@ -62,9 +62,11 @@ DOWNLOAD_DELAY = 1
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'myproject.pipelines.MyprojectPipeline': 300,
-#}
+FILES_STORE = 'images'
+#SpiderでyieldしたItemを処理するパイプライン
+ITEM_PIPELINES = {
+    'scrapy.pipelines.files.FilesPipeline': 1
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
